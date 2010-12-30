@@ -2,7 +2,6 @@
 #ifndef STATA_READ_H
 #define STATA_READ_H
 
-#include <ruby.h>
 #include <inttypes.h>
 
 extern int16_t read_int16_t();
@@ -20,6 +19,5 @@ extern float read_double_t();
 
 struct stata_file;
 extern struct stata_file * read_stata_file(char * filename);
-extern VALUE method_read(VALUE self, VALUE file);
 
 #endif

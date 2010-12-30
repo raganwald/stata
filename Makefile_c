@@ -1,0 +1,5 @@
+
+OBJS = Read.o Write.o Stata.o
+
+all: $(OBJS)
+	g++ $(OBJS) -o stata_c_test

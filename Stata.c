@@ -5,7 +5,6 @@
 #include <string.h>
 #include <assert.h>
 #include <inttypes.h>
-#include <ruby.h>
 
 #include "Stata.h"
 #include "Read.h"
@@ -19,13 +18,6 @@ char get_host_endian()
   int i = 1;
   char *p = (char *) &i;
   return (p[0] == 1) ? 0x02 : 0x01;
-}
-
-void Init_Stata()
-{
-  VALUE Stata_module = rb_define_module("Stata");
-  rb_define_singleton_method(Stata_module, "read", method_read, 1);
-  rb_define_singleton_method(Stata_module, "write", method_write, 2);
 }
 
 void free_stata(struct stata_file * f)

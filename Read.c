@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 int16_t read_int16_t() { int16_t t; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? ((t>>8) | (t<<8)) : t); }
