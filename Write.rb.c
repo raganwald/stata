@@ -1,8 +1,9 @@
 
 #include <assert.h>
 #include <math.h>
-#include "Write.h"
+#include <ruby.h>
 #include "Stata.h"
+#include "Write.h"
 
 int populate_fields_from_ruby_index = 0;
 VALUE populate_fields_from_ruby(VALUE field, struct stata_file * f)

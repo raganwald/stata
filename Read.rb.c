@@ -1,6 +1,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include <ruby.h>
 #include "Stata.h"
 #include "Read.h"
 
