@@ -55,9 +55,13 @@ void free_stata(struct stata_file * f)
 int main(int argc, char *argv[])
 {
   if (argc != 2) { fprintf(stderr, "usage:\n ./read [file]\n"); return(0); }
-  struct stata_file * f = read_stata_file(argv[1]);
-  write_stata_file("out.dta", f);
-  struct stata_file * f1 = read_stata_file(argv[1]);
-  write_stata_file("out.dta", f1);
+  
+  char src_file[100];
+  char dst_file[100];
+  sprintf(src_file, "%s.dta", argv[1]);
+  sprintf(dst_file, "%s_resave.dta", argv[1]);
+  
+  struct stata_file * f = read_stata_file(src_file);
+  write_stata_file(dst_file, f);
   return 0;
 }

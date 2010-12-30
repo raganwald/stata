@@ -7,18 +7,17 @@
 #include <string.h>
 #include <assert.h>
 
-/*int16_t read_int16_t() { int16_t t; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? ((t>>8) | (t<<8)) : t); }*/
-int32_t read_int32_t() { int32_t t; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? __builtin_bswap32(t) : t); }
+int16_t read_int16_t() { int16_t t=0; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? ((t>>8) | (t<<8)) : t); }
+int32_t read_int32_t() { int32_t t=0; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? __builtin_bswap32(t) : t); }
 
-uint16_t read_uint16_t() { uint16_t t; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? (t>>8)|(t<<8) : t; }
-uint32_t read_uint32_t() { uint32_t t; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? __builtin_bswap32(t) : t; }
-/*uint64_t read_uint64_t() { uint64_t t; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? __builtin_bswap64(t) : t; }*/
+uint16_t read_uint16_t() { uint16_t t=0; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? (t>>8)|(t<<8) : t; }
+uint32_t read_uint32_t() { uint32_t t=0; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? __builtin_bswap32(t) : t; }
 
 char * read_string(int length) { char * t = (char*)malloc(length+1); fread(t, length, 1, fp); t[length] = 0; return t; }
 char ** read_strings(int num, int length) { char ** t = (char **)malloc(sizeof(char *)*num); int i; for (i = 0 ; i < num ; i++) t[i] = read_string(length); return t; }
 
-/*float read_float_t() { return (float)read_uint32_t(); }*/
-/*float read_double_t() { return (double)read_uint64_t(); }*/
+float read_float_t() { uint32_t t=0; fread(&t, sizeof(t), 1, fp); if (swap_endian_needed==1) t = __builtin_bswap32(t); return *((float *)(void *)&t); }
+float read_double_t() { uint64_t t=0; fread(&t, sizeof(t), 1, fp); if (swap_endian_needed==1) t = __builtin_bswap64(t); return *((double *)(void *)&t); }
 
 struct stata_file * read_stata_file(char * filename)
 {
@@ -89,12 +88,12 @@ struct stata_file * read_stata_file(char * filename)
       memset(var, 0, sizeof(struct stata_var));
       
       if (f->typlist[i] != 0 && 
-               f->typlist[i] < 245) {  var->v_type = V_STR;    var->v_str = read_string(f->typlist[i]); }
-      else if (f->typlist[i] == 251) { var->v_type = V_BYTE;   assert(fread(&var->v_byte, sizeof(var->v_byte), 1, fp)==1); }
-      else if (f->typlist[i] == 252) { var->v_type = V_INT;    assert(fread(&var->v_int, sizeof(var->v_int), 1, fp)==1); }
-      else if (f->typlist[i] == 253) { var->v_type = V_LONG;   assert(fread(&var->v_long, sizeof(var->v_long), 1, fp)==1); }
-      else if (f->typlist[i] == 254) { var->v_type = V_FLOAT;  assert(fread(&var->v_float, sizeof(var->v_float), 1, fp)==1); }
-      else if (f->typlist[i] == 255) { var->v_type = V_DOUBLE; assert(fread(&var->v_double, sizeof(var->v_double), 1, fp)==1); }
+                f->typlist[i] < 245) { var->v_type = V_STR;    var->v_str = read_string(f->typlist[i]); assert(!feof(fp)); }
+      else if (f->typlist[i] == 251) { var->v_type = V_BYTE;   assert(fread(&var->v_byte, sizeof(var->v_byte), 1, fp)==1); assert(!feof(fp)); }
+      else if (f->typlist[i] == 252) { var->v_type = V_INT;    var->v_int = read_int16_t();     assert(!feof(fp)); }
+      else if (f->typlist[i] == 253) { var->v_type = V_LONG;   var->v_long = read_int32_t();    assert(!feof(fp)); }
+      else if (f->typlist[i] == 254) { var->v_type = V_FLOAT;  var->v_float = read_float_t();   assert(!feof(fp)); }
+      else if (f->typlist[i] == 255) { var->v_type = V_DOUBLE; var->v_double = read_double_t(); assert(!feof(fp)); }
       else fprintf(stderr, "error.\n");
       
       if (ferror(fp)) perror("error occurred");
