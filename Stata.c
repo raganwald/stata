@@ -22,7 +22,6 @@ char get_host_endian()
 
 void free_stata(struct stata_file * f)
 {
-  return;
   int i;
   free(f->filename);
   for (i = 0 ; i < f->nvar ; i++) free(f->varlist[i]);
@@ -60,4 +59,5 @@ int main(int argc, char *argv[])
   write_stata_file("out.dta", f);
   struct stata_file * f1 = read_stata_file(argv[1]);
   write_stata_file("out.dta", f1);
+  return 0;
 }

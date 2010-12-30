@@ -22,7 +22,6 @@ struct stata_var {
     float v_float;
     double v_double;
   };
-  //int dot; /* missing values */
 };
 
 struct stata_obs {
@@ -36,7 +35,6 @@ struct stata_vlt {
   int32_t * off;
   int32_t * val;
   char * txtbuf;
-  //char ** txt;
 };
 
 struct stata_file {

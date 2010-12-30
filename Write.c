@@ -17,6 +17,9 @@ int write_stata_file(char * filename, struct stata_file * f)
   fp = fopen(filename, "wb");
   if (fp == NULL) { fprintf(stderr, "error opening file \"%s\"\n", filename); return 0; }
   
+  assert(f != NULL);
+  assert(f->nvar > 0);
+  assert(f->nobs > 0);
   
   /* 5.1 Headers */
   char header[4] = {0x72, get_host_endian(), 0x01, 0x00};
@@ -46,9 +49,7 @@ int write_stata_file(char * filename, struct stata_file * f)
   
   
   /* 5.5 Data */
-  int out = 0;
-  int count = 0;
-  //printf("  write 5.5 Data (%dx%d)\n", f->nobs, f->nvar);
+  /*printf("  write 5.5 Data (%dx%d)\n", f->nobs, f->nvar);*/
   for (j = 0 ; j < f->nobs ; j++)
   {
     for (i = 0 ; i < f->nvar ; i++)
@@ -65,7 +66,7 @@ int write_stata_file(char * filename, struct stata_file * f)
   
   
   /* 5.6 Value Labels */
-  //printf("  write 5.6 Value Labels (%d)\n", f->num_vlt);
+  /*printf("  write 5.6 Value Labels (%d)\n", f->num_vlt);*/
   for (i = 0 ; i < f->num_vlt ; i++)
   {
     struct stata_vlt * vlt = &f->vlt[i];

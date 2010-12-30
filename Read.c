@@ -7,18 +7,18 @@
 #include <string.h>
 #include <assert.h>
 
-int16_t read_int16_t() { int16_t t; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? ((t>>8) | (t<<8)) : t); }
+/*int16_t read_int16_t() { int16_t t; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? ((t>>8) | (t<<8)) : t); }*/
 int32_t read_int32_t() { int32_t t; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? __builtin_bswap32(t) : t); }
 
 uint16_t read_uint16_t() { uint16_t t; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? (t>>8)|(t<<8) : t; }
 uint32_t read_uint32_t() { uint32_t t; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? __builtin_bswap32(t) : t; }
-uint64_t read_uint64_t() { uint64_t t; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? __builtin_bswap64(t) : t; }
+/*uint64_t read_uint64_t() { uint64_t t; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? __builtin_bswap64(t) : t; }*/
 
 char * read_string(int length) { char * t = (char*)malloc(length+1); fread(t, length, 1, fp); t[length] = 0; return t; }
 char ** read_strings(int num, int length) { char ** t = (char **)malloc(sizeof(char *)*num); int i; for (i = 0 ; i < num ; i++) t[i] = read_string(length); return t; }
 
-float read_float_t() { return (float)read_uint32_t(); }
-float read_double_t() { return (double)read_uint64_t(); }
+/*float read_float_t() { return (float)read_uint32_t(); }*/
+/*float read_double_t() { return (double)read_uint64_t(); }*/
 
 struct stata_file * read_stata_file(char * filename)
 {
@@ -32,10 +32,10 @@ struct stata_file * read_stata_file(char * filename)
   fp = fopen(f->filename, "rb");
   if (fp == NULL) { fprintf(stderr, "error opening file \"%s\"\n", f->filename); return f; }
   
-  fseek(fp, 0 , SEEK_END);
+  /*fseek(fp, 0 , SEEK_END);
   long lSize = ftell(fp);
   rewind(fp);
-  //printf("file is %ld bytes long\n", lSize);
+  printf("file is %ld bytes long\n", lSize);*/
   
   
   /* 5.1 Header */
@@ -48,7 +48,6 @@ struct stata_file * read_stata_file(char * filename)
   f->nobs = read_uint32_t(); assert(f->nobs > 1);
   fread(&f->data_label, sizeof(f->data_label), 1, fp);
   fread(&f->time_stamp, sizeof(f->time_stamp), 1, fp);
-  //printf("read file \"%s\": %d variables and %d observations\n", f->filename, f->nvar, f->nobs);
   printf("read file \"%s\"\n", f->filename);
   
   
@@ -74,11 +73,11 @@ struct stata_file * read_stata_file(char * filename)
     assert(fread(&len, 4, 1, fp)==1);
     if (len > 0) for (i = 0 ; i < len ; i++) fgetc(fp);
   } while(data_type != 0 || len != 0 || feof(fp));
-  //printf ("read %d bytes of expansion fields\n", count);
+  /*printf ("read %d bytes of expansion fields\n", count);*/
   
   
   /* 5.5 Data */
-  //printf("  read 5.5 Data (%dx%d)\n", f->nobs, f->nvar);
+  /*printf("  read 5.5 Data (%dx%d)\n", f->nobs, f->nvar);*/
   f->obs = (struct stata_obs *)malloc(sizeof(struct stata_obs)*f->nobs);
   int j = 0;
   for (j = 0 ; j < f->nobs ; j++)
@@ -88,7 +87,6 @@ struct stata_file * read_stata_file(char * filename)
     {
       struct stata_var * var = &f->obs[j].var[i];
       memset(var, 0, sizeof(struct stata_var));
-      //var->dot = -1;
       
       if (f->typlist[i] != 0 && 
                f->typlist[i] < 245) {  var->v_type = V_STR;    var->v_str = read_string(f->typlist[i]); }
@@ -131,7 +129,7 @@ struct stata_file * read_stata_file(char * filename)
       fread(vlt->txtbuf, vlt->txtlen, 1, fp);
     }
   }
-  //printf("  read 5.6 Value labels (%d)\n", f->num_vlt);
+  /*printf("  read 5.6 Value labels (%d)\n", f->num_vlt);*/
 
   
   fclose(fp);

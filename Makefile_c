@@ -1,5 +1,9 @@
 
 OBJS = Read.o Write.o Stata.o
+STD = 
+
+%.o: %.c
+	cc $(STD) -Wall $*.c -c -o $@
 
 all: $(OBJS)
-	cc $(OBJS) -o stata_c_test
+	cc $(STD) $(OBJS) -Wall -o stata_c_test
