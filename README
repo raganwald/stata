@@ -12,7 +12,7 @@ to make the test Ruby app, run:
 
   cd ext
   ruby extconf.rb
-  ./make
+  make
   ./test.rb file.dta
   
   this will do the same, but using the Ruby extension
