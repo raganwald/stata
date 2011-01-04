@@ -1,19 +1,21 @@
 
 to make the test C app, run:
 
+  cd ext
   make -f Makefile_c -B
-  ./stata_c_test test_file_1.dta
+  ./stata_c_test file.dta
 
-this will compile the application, read the file test_file_1.dta and create a copy of it from the same data in out.dta
+this will compile the application, read file.dta and create a copy of it from the same data in out.dta
 
 
 to make the test Ruby app, run:
 
+  cd ext
   ruby extconf.rb
   ./make
-  ./test.rb
+  ./test.rb file.dta
   
-  this will do the same, but testing the file hardcoded in the ruby script (currently test_file_1.dta, test_file_2.dta and test_file_3.dta)
+  this will do the same, but using the Ruby extension
 
 
 If the app finds any issues with the data, it will fail an assert, which will give you line numbers to the source.
