@@ -1,9 +1,23 @@
 
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <ruby.h>
 #include "Stata.h"
 #include "Write.h"
+
+#ifndef RUBY_19
+#ifndef RFLOAT_VALUE
+#define RFLOAT_VALUE(v) (RFLOAT(v)->value)
+#endif
+#ifndef RARRAY_LEN
+#define RARRAY_LEN(v) (RARRAY(v)->len)
+#endif
+#ifndef RARRAY_PTR
+#define RARRAY_PTR(v) (RARRAY(v)->ptr)
+#endif
+#endif
 
 int populate_fields_from_ruby_index = 0;
 VALUE populate_fields_from_ruby(VALUE field, struct stata_file * f)
@@ -62,14 +76,14 @@ VALUE populate_data_from_ruby(VALUE row, struct stata_file * f)
     switch (TYPE(v)) {
       case T_SYMBOL:
         v = rb_str_new2(rb_id2name(SYM2ID(v)));
-        const char * symbol_name = STR2CSTR(v);
+        const char * symbol_name = RSTRING_PTR(v);
         
         int dot = 0;
         if (strlen(symbol_name) == 5) dot = symbol_name[4] - 96;
         if (dot < 0 || dot > 26) { printf("ERROR, INVALID SYMBOL '%s'\n", symbol_name); continue; }
         
         if (f->typlist[j] == 255) var->v_double = pow(2, 1023) + dot*pow(2, 1011);
-        else if (f->typlist[j] == 254) var->v_float = pow(2, 127) + dot*pow(2, 115);
+        else if (f->typlist[j] == 254) var->v_float = (float)pow(2, 127) + dot*(float)pow(2, 115);
         else if (f->typlist[j] == 253) var->v_long = 2147483621 + dot;
         else if (f->typlist[j] == 252) var->v_int = 32741 + dot;
         else if (f->typlist[j] == 251) var->v_byte = 101 + dot;
@@ -82,19 +96,19 @@ VALUE populate_data_from_ruby(VALUE row, struct stata_file * f)
       case T_FIXNUM:
       case T_FLOAT:
         if (f->typlist[j] == 255) var->v_double = rb_num2dbl(v);
-        else if (f->typlist[j] == 254) var->v_float = rb_num2dbl(v);
-        else if (f->typlist[j] == 253) var->v_long = FIX2LONG(v);
+        else if (f->typlist[j] == 254) var->v_float = (float)rb_num2dbl(v);
+        else if (f->typlist[j] == 253) var->v_long = (int32_t)FIX2LONG(v);
         else if (f->typlist[j] == 252) var->v_int = FIX2LONG(v);
         else if (f->typlist[j] == 251) var->v_byte = FIX2LONG(v);
         else {
-          printf("ERROR: invalid typlist '%d' %d %f\n", f->typlist[j], TYPE(v), RFLOAT(v)->value);
+          printf("ERROR: invalid typlist '%d' %d %f\n", f->typlist[j], TYPE(v), RFLOAT_VALUE(v));
           exit(1);
         }
       break;
       case T_STRING:
         var->v_type = f->typlist[j];
         var->v_str = (char*)malloc(f->typlist[j]+1);
-        strncpy(var->v_str, STR2CSTR(v), f->typlist[j]+1);
+        strncpy(var->v_str, RSTRING_PTR(v), f->typlist[j]+1);
       break;
       case T_NIL:
         printf("ERROR: nil value submitted - this is invalid.\n");
@@ -120,38 +134,38 @@ VALUE populate_value_labels_from_ruby(VALUE r_vlt, struct stata_file * f)
   
   v = rb_hash_aref(r_vlt, rb_str_new2("name"));
   assert(TYPE(v) == T_STRING);
-  strncpy(vlt->name, STR2CSTR(v), 33);
+  strncpy(vlt->name, RSTRING_PTR(v), 33);
   
   v = rb_hash_aref(r_vlt, rb_str_new2("table"));
   assert(TYPE(v) == T_ARRAY);
   
-  vlt->n = RARRAY(v)->len;
+  vlt->n = (int32_t)RARRAY_LEN(v);
   vlt->txtlen = 0;
   vlt->off = (uint32_t*)malloc(sizeof(uint32_t)*vlt->n);
   vlt->val = (uint32_t*)malloc(sizeof(uint32_t)*vlt->n);
   vlt->txtbuf = NULL;
   
   int i;
-  for (i = 0 ; i < RARRAY(v)->len ; i++)
+  for (i = 0 ; i < RARRAY_LEN(v) ; i++)
   {
     VALUE r = rb_ary_entry(v, i);
     assert(TYPE(r) == T_ARRAY);
     assert(TYPE(rb_ary_entry(r, 0)) == T_FIXNUM);
     assert(TYPE(rb_ary_entry(r, 1)) == T_STRING);
-    char * txt = STR2CSTR(rb_ary_entry(r, 1));
-    vlt->txtlen += strlen(txt)+1;
+    char * txt = RSTRING_PTR(rb_ary_entry(r, 1));
+    vlt->txtlen += (int32_t)strlen(txt)+1;
   }
   vlt->txtbuf = (char*)malloc(vlt->txtlen);
   
   vlt->txtlen = 0;
-  for (i = 0 ; i < RARRAY(v)->len ; i++)
+  for (i = 0 ; i < RARRAY_LEN(v) ; i++)
   {
     VALUE r = rb_ary_entry(v, i);
     vlt->val[i] = NUM2INT(rb_ary_entry(r, 0));
-    char * txt = STR2CSTR(rb_ary_entry(r, 1));
-    vlt->txtlen += strlen(txt)+1;
+    char * txt = RSTRING_PTR(rb_ary_entry(r, 1));
+    vlt->txtlen += (int32_t)strlen(txt)+1;
     
-    vlt->off[i] = vlt->txtlen-(strlen(txt)+1);
+    vlt->off[i] = vlt->txtlen-((int32_t)strlen(txt)+1);
     memcpy(vlt->txtbuf+vlt->off[i], txt, strlen(txt)+1);
   }
   
@@ -210,7 +224,7 @@ VALUE method_write(VALUE self, VALUE filename, VALUE data)
   
   
   /* 5.4 Data */
-  int i, j;
+  long i, j;
   f->obs = (struct stata_obs *)malloc(sizeof(struct stata_obs)*f->nobs);
   for (j = 0 ; j < f->nobs ; j++)
   {
@@ -235,7 +249,7 @@ VALUE method_write(VALUE self, VALUE filename, VALUE data)
   populate_value_labels_from_ruby_index = 0;
   rb_iterate(rb_each, v, populate_value_labels_from_ruby, (VALUE)f);
   
-  write_stata_file(STR2CSTR(filename), f);
+  write_stata_file(RSTRING_PTR(filename), f);
   
   free_stata(f);
   return INT2NUM(1);

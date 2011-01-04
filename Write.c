@@ -12,7 +12,7 @@ struct stata_file;
 int write_stata_file(char * filename, struct stata_file * f)
 {
   printf("write file \"%s\"\n", filename);
-  int i,j;
+  long i,j;
   
   fp = fopen(filename, "wb");
   if (fp == NULL) { fprintf(stderr, "error opening file \"%s\"\n", filename); return 0; }
@@ -77,11 +77,11 @@ int write_stata_file(char * filename, struct stata_file * f)
     assert(fwrite(&vlt->n, sizeof(vlt->n), 1, fp)==1);
     uint32_t txtlen = 0;
     for (j = 0 ; j < vlt->n ; j++)
-      txtlen += strlen(vlt->txtbuf + vlt->off[j]) + 1;
+      txtlen += (int)strlen(vlt->txtbuf + vlt->off[j]) + 1;
     
     assert(fwrite(&txtlen, sizeof(txtlen), 1, fp)==1);
-    assert(fwrite(vlt->off, sizeof(uint32_t), vlt->n, fp)==vlt->n);
-    assert(fwrite(vlt->val, sizeof(uint32_t), vlt->n, fp)==vlt->n);
+    assert(fwrite(vlt->off, sizeof(uint32_t), vlt->n, fp)==(unsigned int)vlt->n);
+    assert(fwrite(vlt->val, sizeof(uint32_t), vlt->n, fp)==(unsigned int)vlt->n);
     assert(fwrite(vlt->txtbuf, txtlen, 1, fp)==1);
   }
   

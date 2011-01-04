@@ -22,7 +22,8 @@ char get_host_endian()
 
 void free_stata(struct stata_file * f)
 {
-  int i;
+  long i;
+  
   free(f->filename);
   for (i = 0 ; i < f->nvar ; i++) free(f->varlist[i]);
   for (i = 0 ; i < f->nvar ; i++) free(f->fmtlist[i]);

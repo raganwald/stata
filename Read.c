@@ -8,7 +8,7 @@
 #include <assert.h>
 
 int16_t read_int16_t() { int16_t t=0; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? ((t>>8) | (t<<8)) : t); }
-int32_t read_int32_t() { int32_t t=0; fread(&t, sizeof(t), 1, fp); return ((swap_endian_needed==1) ? __builtin_bswap32(t) : t); }
+int32_t read_int32_t() { int32_t t=0; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? (int32_t)__builtin_bswap32(t) : t; }
 
 uint16_t read_uint16_t() { uint16_t t=0; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? (t>>8)|(t<<8) : t; }
 uint32_t read_uint32_t() { uint32_t t=0; fread(&t, sizeof(t), 1, fp); return (swap_endian_needed==1) ? __builtin_bswap32(t) : t; }
@@ -17,11 +17,11 @@ char * read_string(int length) { char * t = (char*)malloc(length+1); fread(t, le
 char ** read_strings(int num, int length) { char ** t = (char **)malloc(sizeof(char *)*num); int i; for (i = 0 ; i < num ; i++) t[i] = read_string(length); return t; }
 
 float read_float_t() { uint32_t t=0; fread(&t, sizeof(t), 1, fp); if (swap_endian_needed==1) t = __builtin_bswap32(t); return *((float *)(void *)&t); }
-float read_double_t() { uint64_t t=0; fread(&t, sizeof(t), 1, fp); if (swap_endian_needed==1) t = __builtin_bswap64(t); return *((double *)(void *)&t); }
+double read_double_t() { uint64_t t=0; fread(&t, sizeof(t), 1, fp); if (swap_endian_needed==1) t = __builtin_bswap64(t); return *((double *)(void *)&t); }
 
 struct stata_file * read_stata_file(char * filename)
 {
-  int i;
+  long i,j;
   
   struct stata_file * f = (struct stata_file *)malloc(sizeof(struct stata_file));
   memset(f, 0, sizeof(struct stata_file));
@@ -78,7 +78,6 @@ struct stata_file * read_stata_file(char * filename)
   /* 5.5 Data */
   /*printf("  read 5.5 Data (%dx%d)\n", f->nobs, f->nvar);*/
   f->obs = (struct stata_obs *)malloc(sizeof(struct stata_obs)*f->nobs);
-  int j = 0;
   for (j = 0 ; j < f->nobs ; j++)
   {
     f->obs[j].var = (struct stata_var *)malloc(sizeof(struct stata_var)*f->nvar);
@@ -97,9 +96,9 @@ struct stata_file * read_stata_file(char * filename)
       else fprintf(stderr, "error.\n");
       
       if (ferror(fp)) perror("error occurred");
-      if (feof(fp)) { fprintf(stderr, "eof error at var %d (error:%d)\n", i, ferror(fp)); break; }
+      if (feof(fp)) { fprintf(stderr, "eof error at var %ld (error:%d)\n", i, ferror(fp)); break; }
     }
-    if (feof(fp)) { fprintf(stderr, "eof error at obs %d (error:%d)\n", j, ferror(fp)); exit(1); }
+    if (feof(fp)) { fprintf(stderr, "eof error at obs %ld (error:%d)\n", j, ferror(fp)); exit(1); }
   }
   
   

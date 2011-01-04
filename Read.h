@@ -15,7 +15,7 @@ extern char * read_string(int length);
 extern char ** read_strings(int num, int length);
 
 extern float read_float_t();
-extern float read_double_t();
+extern double read_double_t();
 
 struct stata_file;
 extern struct stata_file * read_stata_file(char * filename);

@@ -7,7 +7,7 @@
 
 VALUE method_read(VALUE self, VALUE file)
 {
-	int i,j;
+	long i,j;
   
   assert(TYPE(file) == T_STRING);
   
@@ -81,7 +81,7 @@ VALUE method_read(VALUE self, VALUE file)
         }
         else if (f->obs[i].var[j].v_float >= pow(2, 127))
         {
-          int dot = (f->obs[i].var[j].v_float - pow(2, 127)) / pow(2, 115);
+          int dot = (f->obs[i].var[j].v_float - (float)pow(2, 127)) / (float)pow(2, 115);
           if (dot == 0) symbol_name[3] = 0;
           else symbol_name[4] = dot+96;
           symbol_name[5] = 0;
@@ -96,7 +96,7 @@ VALUE method_read(VALUE self, VALUE file)
         }
         else if (f->obs[i].var[j].v_double >= pow(2, 1023))
         {
-          int dot = (f->obs[i].var[j].v_double - pow(2, 1023)) / pow(2, 1011);
+          int dot = (int)((f->obs[i].var[j].v_double - pow(2, 1023)) / pow(2, 1011));
           if (dot == 0) symbol_name[3] = 0;
           else symbol_name[4] = dot+96;
           symbol_name[5] = 0;
