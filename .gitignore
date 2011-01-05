@@ -3,3 +3,4 @@ Makefile
 *.dta
 stata_c_test
 *.bundle
+pkg
