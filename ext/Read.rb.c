@@ -23,17 +23,22 @@ VALUE method_read(VALUE self, VALUE file)
 {
 	long i,j;
   
-  assert(TYPE(file) == T_STRING);
+  if (TYPE(file) != T_STRING)
+  {
+    char error[150];
+    sprintf(error, "filename is not a string, but instead of type '%d' (in C)", TYPE(file));
+    rb_throw(error, Qnil);
+  }
   
   struct stata_file * f = read_stata_file(rb_string_value_cstr(&file));
   
   /* 5.1 Headers */
   VALUE r = rb_hash_new();
-  rb_hash_aset(r, ENCODED_STR_NEW2("file_name", "UTF-8"), ENCODED_STR_NEW2(f->filename, "UTF-8"));
-  rb_hash_aset(r, ENCODED_STR_NEW2("data_label", "UTF-8"), ENCODED_STR_NEW2(f->data_label, "UTF-8"));
-  rb_hash_aset(r, ENCODED_STR_NEW2("time_stamp", "UTF-8"), ENCODED_STR_NEW2(f->time_stamp, "UTF-8"));
-  rb_hash_aset(r, ENCODED_STR_NEW2("nvar", "UTF-8"), INT2NUM(f->nvar));
-  rb_hash_aset(r, ENCODED_STR_NEW2("nobs", "UTF-8"), INT2NUM(f->nobs));
+  rb_hash_aset(r, ENCODED_STR_NEW2("file_name", "ASCII-8BIT"), ENCODED_STR_NEW2(f->filename, "ASCII-8BIT"));
+  rb_hash_aset(r, ENCODED_STR_NEW2("data_label", "ASCII-8BIT"), ENCODED_STR_NEW2(f->data_label, "ASCII-8BIT"));
+  rb_hash_aset(r, ENCODED_STR_NEW2("time_stamp", "ASCII-8BIT"), ENCODED_STR_NEW2(f->time_stamp, "ASCII-8BIT"));
+  rb_hash_aset(r, ENCODED_STR_NEW2("nvar", "ASCII-8BIT"), INT2NUM(f->nvar));
+  rb_hash_aset(r, ENCODED_STR_NEW2("nobs", "ASCII-8BIT"), INT2NUM(f->nobs));
   
   VALUE data = rb_ary_new();
   for (i = 0 ; i < f->nobs ; i++)
@@ -47,7 +52,7 @@ VALUE method_read(VALUE self, VALUE file)
       sprintf(symbol_name, "dot_");
       
       if (f->obs[i].var[j].v_type == V_STR && f->obs[i].var[j].v_str != NULL)
-        var = ENCODED_STR_NEW2(f->obs[i].var[j].v_str, "UTF-8");
+        var = ENCODED_STR_NEW2(f->obs[i].var[j].v_str, "ASCII-8BIT");
       else if (f->obs[i].var[j].v_type == V_BYTE)
       {
         if (f->obs[i].var[j].v_byte >= -127 && f->obs[i].var[j].v_byte <= 100)
@@ -58,7 +63,7 @@ VALUE method_read(VALUE self, VALUE file)
           if (dot == 0) symbol_name[3] = 0;
           else symbol_name[4] = dot+96;
           symbol_name[5] = 0;
-          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "UTF-8"));
+          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "ASCII-8BIT"));
         }
       }
       else if (f->obs[i].var[j].v_type == V_INT)
@@ -71,7 +76,7 @@ VALUE method_read(VALUE self, VALUE file)
           if (dot == 0) symbol_name[3] = 0;
           else symbol_name[4] = dot+96;
           symbol_name[5] = 0;
-          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "UTF-8"));
+          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "ASCII-8BIT"));
         }
       }
       else if (f->obs[i].var[j].v_type == V_LONG)
@@ -84,7 +89,7 @@ VALUE method_read(VALUE self, VALUE file)
           if (dot == 0) symbol_name[3] = 0;
           else symbol_name[4] = dot+96;
           symbol_name[5] = 0;
-          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "UTF-8"));
+          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "ASCII-8BIT"));
         }
       }
       else if (f->obs[i].var[j].v_type == V_FLOAT)
@@ -99,7 +104,7 @@ VALUE method_read(VALUE self, VALUE file)
           if (dot == 0) symbol_name[3] = 0;
           else symbol_name[4] = dot+96;
           symbol_name[5] = 0;
-          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "UTF-8"));
+          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "ASCII-8BIT"));
         }
       }
       else if (f->obs[i].var[j].v_type == V_DOUBLE)
@@ -114,7 +119,7 @@ VALUE method_read(VALUE self, VALUE file)
           if (dot == 0) symbol_name[3] = 0;
           else symbol_name[4] = dot+96;
           symbol_name[5] = 0;
-          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "UTF-8"));
+          var = rb_str_intern(ENCODED_STR_NEW2(symbol_name, "ASCII-8BIT"));
         }
       }
       
@@ -122,44 +127,44 @@ VALUE method_read(VALUE self, VALUE file)
     }
     rb_ary_push(data, row);
   }
-  rb_hash_aset(r, ENCODED_STR_NEW2("data", "UTF-8"), data);
+  rb_hash_aset(r, ENCODED_STR_NEW2("data", "ASCII-8BIT"), data);
   
   
   VALUE fields = rb_ary_new();
   for (i = 0 ; i < f->nvar ; i++)
   {
     VALUE field = rb_hash_new();
-    rb_hash_aset(field, ENCODED_STR_NEW2("id", "UTF-8"), INT2NUM(i+1));
-    rb_hash_aset(field, ENCODED_STR_NEW2("type", "UTF-8"), INT2NUM(f->typlist[i]));
-    rb_hash_aset(field, ENCODED_STR_NEW2("name", "UTF-8"), ENCODED_STR_NEW2(f->varlist[i], "UTF-8"));
-    rb_hash_aset(field, ENCODED_STR_NEW2("format", "UTF-8"), ENCODED_STR_NEW2(f->fmtlist[i], "UTF-8"));
-    rb_hash_aset(field, ENCODED_STR_NEW2("variable_label", "UTF-8"), ENCODED_STR_NEW2(f->variable_labels[i], "UTF-8"));
-    rb_hash_aset(field, ENCODED_STR_NEW2("value_label", "UTF-8"), ENCODED_STR_NEW2(f->lbllist[i], "UTF-8"));
-    rb_hash_aset(field, ENCODED_STR_NEW2("sort", "UTF-8"), INT2NUM(f->srtlist[i]));
+    rb_hash_aset(field, ENCODED_STR_NEW2("id", "ASCII-8BIT"), INT2NUM(i+1));
+    rb_hash_aset(field, ENCODED_STR_NEW2("type", "ASCII-8BIT"), INT2NUM(f->typlist[i]));
+    rb_hash_aset(field, ENCODED_STR_NEW2("name", "ASCII-8BIT"), ENCODED_STR_NEW2(f->varlist[i], "ASCII-8BIT"));
+    rb_hash_aset(field, ENCODED_STR_NEW2("format", "ASCII-8BIT"), ENCODED_STR_NEW2(f->fmtlist[i], "ASCII-8BIT"));
+    rb_hash_aset(field, ENCODED_STR_NEW2("variable_label", "ASCII-8BIT"), ENCODED_STR_NEW2(f->variable_labels[i], "ASCII-8BIT"));
+    rb_hash_aset(field, ENCODED_STR_NEW2("value_label", "ASCII-8BIT"), ENCODED_STR_NEW2(f->lbllist[i], "ASCII-8BIT"));
+    rb_hash_aset(field, ENCODED_STR_NEW2("sort", "ASCII-8BIT"), INT2NUM(f->srtlist[i]));
     rb_ary_push(fields, field);
   }
-  rb_hash_aset(r, ENCODED_STR_NEW2("fields", "UTF-8"), fields);
+  rb_hash_aset(r, ENCODED_STR_NEW2("fields", "ASCII-8BIT"), fields);
   
   
   VALUE vlt = rb_ary_new();
   for (i = 0 ; i < f->num_vlt ; i++)
   {
     VALUE v = rb_hash_new();
-    rb_hash_aset(v, ENCODED_STR_NEW2("name", "UTF-8"), ENCODED_STR_NEW2(f->vlt[i].name, "UTF-8"));
+    rb_hash_aset(v, ENCODED_STR_NEW2("name", "ASCII-8BIT"), ENCODED_STR_NEW2(f->vlt[i].name, "ASCII-8BIT"));
     VALUE table = rb_ary_new();
     for (j = 0 ; j < f->vlt[i].n ; j++)
     {
       VALUE row = rb_ary_new();
       rb_ary_push(row, INT2NUM(f->vlt[i].val[j]));
-      rb_ary_push(row, ENCODED_STR_NEW2(f->vlt[i].txtbuf + f->vlt[i].off[j], "UTF-8"));
+      rb_ary_push(row, ENCODED_STR_NEW2(f->vlt[i].txtbuf + f->vlt[i].off[j], "ASCII-8BIT"));
       
       rb_ary_push(table, row);
     }
     
-    rb_hash_aset(v, ENCODED_STR_NEW2("table", "UTF-8"), table);
+    rb_hash_aset(v, ENCODED_STR_NEW2("table", "ASCII-8BIT"), table);
     rb_ary_push(vlt, v);
   }
-  rb_hash_aset(r, ENCODED_STR_NEW2("value_labels", "UTF-8"), vlt);
+  rb_hash_aset(r, ENCODED_STR_NEW2("value_labels", "ASCII-8BIT"), vlt);
   
   free_stata(f);
   return r;
