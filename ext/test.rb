@@ -1,6 +1,7 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby -w
+#encoding:ASCII-8BIT
 
-require 'yaml'
+$LOAD_PATH << '.'
 require 'Stata'
 
 files = if ARGV.empty?
