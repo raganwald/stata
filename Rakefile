@@ -27,3 +27,10 @@ task :ext do
     system "ruby extconf.rb && make"
   end
 end
+
+begin
+  require 'rspec/core/rake_task'
+  RSpec::Core::RakeTask.new(:spec)
+rescue LoadError
+end
+
