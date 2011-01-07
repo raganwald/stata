@@ -35,7 +35,7 @@ int write_stata_file(char * filename, struct stata_file * f)
   /* 5.2 Descriptors */
   if (fwrite(f->typlist, 1, f->nvar, fp) != f->nvar) return set_error(f, "fwrite to file failed");
   for (i = 0 ; i < f->nvar ; i++) if (fwrite(f->varlist[i], 33, 1, fp) != 1) return set_error(f, "fwrite to file failed");
-  if (fwrite(f->srtlist, 2, f->nvar+1, fp) != f->nvar+1) return set_error(f, "fwrite to file failed");
+  if (fwrite(f->srtlist, 2, f->nvar+1, fp) != (unsigned int)f->nvar+1) return set_error(f, "fwrite to file failed");
   for (i = 0 ; i < f->nvar ; i++) if (fwrite(f->fmtlist[i], 49, 1, fp) != 1) return set_error(f, "fwrite to file failed");
   for (i = 0 ; i < f->nvar ; i++) if (fwrite(f->lbllist[i], 33, 1, fp) != 1) return set_error(f, "fwrite to file failed");
   
