@@ -26,12 +26,12 @@ VALUE method_read(VALUE self, VALUE file)
   {
     char error[150];
     sprintf(error, "filename is not a string, but instead of type '%d' (in C)", TYPE(file));
-    rb_throw(error, Qnil);
+    rb_raise(rb_eArgError, error);
   }
   
   struct stata_file * f = read_stata_file(rb_string_value_cstr(&file));
-  if (f == NULL) rb_throw("Read Error", Qnil);
-  if (f->error) rb_throw(f->error, Qnil);
+  if (f == NULL) rb_raise(rb_eRuntimeError, "Read Error");
+  if (f->error) rb_raise(rb_eRuntimeError, f->error);
   
   
   /* 5.1 Headers */
