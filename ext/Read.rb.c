@@ -22,16 +22,11 @@ VALUE method_read(VALUE self, VALUE file)
 {
 	long i,j;
   
-  if (TYPE(file) != T_STRING)
-  {
-    char error[150];
-    sprintf(error, "filename is not a string, but instead of type '%d' (in C)", TYPE(file));
-    rb_raise(rb_eArgError, error);
-  }
+  if (TYPE(file) != T_STRING) rb_raise(rb_eArgError, "filename is not a string, but instead of type '%d' (in C)", TYPE(file));
   
   struct stata_file * f = read_stata_file(rb_string_value_cstr(&file));
   if (f == NULL) rb_raise(rb_eRuntimeError, "Read Error");
-  if (f->error) rb_raise(rb_eRuntimeError, f->error);
+  if (f->error) rb_raise(rb_eRuntimeError, "%s", f->error);
   
   
   /* 5.1 Headers */

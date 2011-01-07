@@ -24,7 +24,7 @@ end
 desc "build extension"
 task :ext do
   Dir.chdir('ext') do
-    system "ruby extconf.rb && make"
+    system "ruby extconf.rb && make -B"
   end
 end
 

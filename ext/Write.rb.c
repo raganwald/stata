@@ -257,7 +257,7 @@ VALUE method_write(VALUE self, VALUE filename, VALUE data)
   
   write_stata_file(RSTRING_PTR(filename), f);
   
-  if (f->error) rb_raise(rb_eRuntimeError, f->error);
+  if (f->error) rb_raise(rb_eRuntimeError, "%s", f->error);
   
   free_stata(f);
   
