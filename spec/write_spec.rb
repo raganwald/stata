@@ -25,6 +25,18 @@ describe 'Stata.write' do
     @file.close
   end
 
+  keys.each do |key|
+    it "raises ArgumentError if #{key.inspect} is missing" do
+      @s.delete(key)
+      expect { Stata.write(@file.path, @s) }.to raise_error(ArgumentError)
+    end
+
+    it "raises ArgumentError if #{key.inspect} is not of the right type" do
+      @s[key] = Object.new
+      expect { Stata.write(@file.path, @s) }.to raise_error(ArgumentError)
+    end
+  end
+
   it "produces a file that, when read by Stata.read, is identical to the original data structure" do
     Stata.write(@file.path, @s)
 

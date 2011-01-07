@@ -24,30 +24,30 @@ VALUE populate_fields_from_ruby(VALUE field, struct stata_file * f)
   VALUE v;
   
   v = rb_hash_aref(field, rb_str_new2("type"));
-  if (TYPE(v) != T_FIXNUM) rb_throw("field type is not provided or is not a Fixnum", Qnil);
+  if (TYPE(v) != T_FIXNUM) rb_raise(rb_eArgError, "field type is not provided or is not a Fixnum");
   f->typlist[populate_fields_from_ruby_index] = NUM2INT(v);
   
   v = rb_hash_aref(field, rb_str_new2("name"));
-  if (TYPE(v) != T_STRING) rb_throw("field name is not provided or is not a Fixnum", Qnil);
+  if (TYPE(v) != T_STRING) rb_raise(rb_eArgError, "field name is not provided or is not a Fixnum");
   f->varlist[populate_fields_from_ruby_index] = (char*)malloc(33);
   strncpy(f->varlist[populate_fields_from_ruby_index], rb_string_value_cstr(&v), 33);
   
   v = rb_hash_aref(field, rb_str_new2("sort"));
-  if (TYPE(v) != T_FIXNUM) rb_throw("field sort is not provided or is not a Fixnum", Qnil);
+  if (TYPE(v) != T_FIXNUM) rb_raise(rb_eArgError, "field sort is not provided or is not a Fixnum");
   f->srtlist[populate_fields_from_ruby_index] = NUM2INT(v);
   
   v = rb_hash_aref(field, rb_str_new2("format"));
-  if (TYPE(v) != T_STRING) rb_throw("field format is not provided or is not a Fixnum", Qnil);
+  if (TYPE(v) != T_STRING) rb_raise(rb_eArgError, "field format is not provided or is not a Fixnum");
   f->fmtlist[populate_fields_from_ruby_index] = (char*)malloc(49);
   strncpy(f->fmtlist[populate_fields_from_ruby_index], rb_string_value_cstr(&v), 49);
   
   v = rb_hash_aref(field, rb_str_new2("value_label"));
-  if (TYPE(v) != T_STRING) rb_throw("field value_label is not provided or is not a String", Qnil);
+  if (TYPE(v) != T_STRING) rb_raise(rb_eArgError, "field value_label is not provided or is not a String");
   f->lbllist[populate_fields_from_ruby_index] = (char*)malloc(33);
   strncpy(f->lbllist[populate_fields_from_ruby_index], rb_string_value_cstr(&v), 33);
   
   v = rb_hash_aref(field, rb_str_new2("variable_label"));
-  if (TYPE(v) != T_STRING) rb_throw("field variable_label is not provided or is not a String", Qnil);
+  if (TYPE(v) != T_STRING) rb_raise(rb_eArgError, "field variable_label is not provided or is not a String");
   f->variable_labels[populate_fields_from_ruby_index] = (char*)malloc(81);
   strncpy(f->variable_labels[populate_fields_from_ruby_index], rb_string_value_cstr(&v), 81);
   
@@ -129,14 +129,14 @@ VALUE populate_value_labels_from_ruby(VALUE r_vlt, struct stata_file * f)
   f->vlt = (struct stata_vlt *)realloc(f->vlt, sizeof(struct stata_vlt)*f->num_vlt);
   struct stata_vlt * vlt = &f->vlt[f->num_vlt-1];
   
-  if (TYPE(r_vlt) != T_HASH) rb_throw("Value label table should be a Hash", Qnil);
+  if (TYPE(r_vlt) != T_HASH) rb_raise(rb_eArgError, "Value label table should be a Hash");
   
   v = rb_hash_aref(r_vlt, rb_str_new2("name"));
-  if (TYPE(v) != T_STRING) rb_throw("Value label table name isn't provided or isn't a String", Qnil);
+  if (TYPE(v) != T_STRING) rb_raise(rb_eArgError, "Value label table name isn't provided or isn't a String");
   strncpy(vlt->name, RSTRING_PTR(v), 33);
   
   v = rb_hash_aref(r_vlt, rb_str_new2("table"));
-  if (TYPE(v) != T_ARRAY) rb_throw("Value label table name isn't provided or isn't an Array", Qnil);
+  if (TYPE(v) != T_ARRAY) rb_raise(rb_eArgError, "Value label table name isn't provided or isn't an Array");
   
   vlt->n = (int32_t)RARRAY_LEN(v);
   vlt->txtlen = 0;
@@ -148,9 +148,9 @@ VALUE populate_value_labels_from_ruby(VALUE r_vlt, struct stata_file * f)
   for (i = 0 ; i < RARRAY_LEN(v) ; i++)
   {
     VALUE r = rb_ary_entry(v, i);
-    if (TYPE(r) != T_ARRAY) rb_throw("value label contains a row which isn't an Array", Qnil);
-    if (TYPE(rb_ary_entry(r, 0)) != T_FIXNUM) rb_throw("value label contains a value which isn't a Fixnum", Qnil);
-    if (TYPE(rb_ary_entry(r, 1)) != T_STRING) rb_throw("value label contains a label which isn't a String", Qnil);
+    if (TYPE(r) != T_ARRAY) rb_raise(rb_eArgError, "value label contains a row which isn't an Array");
+    if (TYPE(rb_ary_entry(r, 0)) != T_FIXNUM) rb_raise(rb_eArgError, "value label contains a value which isn't a Fixnum");
+    if (TYPE(rb_ary_entry(r, 1)) != T_STRING) rb_raise(rb_eArgError, "value label contains a label which isn't a String");
     char * txt = RSTRING_PTR(rb_ary_entry(r, 1));
     vlt->txtlen += (int32_t)strlen(txt)+1;
   }
@@ -174,53 +174,53 @@ VALUE populate_value_labels_from_ruby(VALUE r_vlt, struct stata_file * f)
 VALUE method_write(VALUE self, VALUE filename, VALUE data)
 {
   VALUE v;
-  if (TYPE(data) != T_HASH) rb_throw("Content to be written should be a hash", Qnil);
-  if (TYPE(filename) != T_STRING) rb_throw("Filename for writing is not a string", Qnil);
+  if (TYPE(data) != T_HASH) rb_raise(rb_eArgError, "Content to be written should be a hash");
+  if (TYPE(filename) != T_STRING) rb_raise(rb_eArgError, "Filename for writing is not a string");
   
-  if (rb_hash_aref(data, rb_str_new2("nvar")) == Qnil) rb_throw("nvar is required", Qnil);
-  if (rb_hash_aref(data, rb_str_new2("nobs")) == Qnil) rb_throw("nobs is required", Qnil);
-  if (rb_hash_aref(data, rb_str_new2("fields")) == Qnil) rb_throw("no fields provided", Qnil);
-  if (rb_hash_aref(data, rb_str_new2("data")) == Qnil) rb_throw("no data provided", Qnil);
+  if (rb_hash_aref(data, rb_str_new2("nvar")) == Qnil) rb_raise(rb_eArgError, "nvar is required");
+  if (rb_hash_aref(data, rb_str_new2("nobs")) == Qnil) rb_raise(rb_eArgError, "nobs is required");
+  if (rb_hash_aref(data, rb_str_new2("fields")) == Qnil) rb_raise(rb_eArgError, "no fields provided");
+  if (rb_hash_aref(data, rb_str_new2("data")) == Qnil) rb_raise(rb_eArgError, "no data provided");
   
   struct stata_file * f = (struct stata_file *)malloc(sizeof(struct stata_file));
-  if (f == NULL) rb_throw("Could not allocate memory for the stata file", Qnil);
+  if (f == NULL) rb_raise(rb_eArgError, "Could not allocate memory for the stata file");
   memset(f, 0, sizeof(struct stata_file));
   
   
   /* 5.1 Headers */
   v = rb_hash_aref(data, rb_str_new2("nvar"));
-  if (TYPE(v) != T_FIXNUM) rb_throw("nvar is not provided or is not a fixnum", Qnil);
+  if (TYPE(v) != T_FIXNUM) rb_raise(rb_eArgError, "nvar is not provided or is not a fixnum");
   f->nvar = NUM2UINT(v);
   
   v = rb_hash_aref(data, rb_str_new2("nobs"));
-  if (TYPE(v) != T_FIXNUM) rb_throw("nobs is not provided or is not a fixnum", Qnil);
+  if (TYPE(v) != T_FIXNUM) rb_raise(rb_eArgError, "nobs is not provided or is not a fixnum");
   f->nobs = NUM2UINT(v);
   
   v = rb_hash_aref(data, rb_str_new2("data_label"));
-  if (TYPE(v) != T_STRING) rb_throw("data_label is not provided or is not a string", Qnil);
+  if (TYPE(v) != T_STRING) rb_raise(rb_eArgError, "data_label is not provided or is not a string");
   strncpy(f->data_label, rb_string_value_cstr(&v), sizeof(f->data_label));
   
   v = rb_hash_aref(data, rb_str_new2("time_stamp"));
-  if (TYPE(v) != T_STRING) rb_throw("time_stamp is not provided or is not a string", Qnil);
+  if (TYPE(v) != T_STRING) rb_raise(rb_eArgError, "time_stamp is not provided or is not a string");
   strncpy(f->time_stamp, rb_string_value_cstr(&v), sizeof(f->time_stamp));
   
   
   /* 5.2 and 5.3, Descriptors and Variable Labels */
   f->typlist = (uint8_t *)malloc(f->nvar);
-  if (f->typlist == NULL) rb_throw("Could not allocate more memory", Qnil);
+  if (f->typlist == NULL) rb_raise(rb_eRuntimeError, "Could not allocate more memory");
   f->varlist = (char **)malloc(sizeof(char *)*f->nvar);
-  if (f->varlist == NULL) rb_throw("Could not allocate more memory", Qnil);
+  if (f->varlist == NULL) rb_raise(rb_eRuntimeError, "Could not allocate more memory");
   f->srtlist = (uint16_t *)malloc(sizeof(uint16_t)*(f->nvar+1));
-  if (f->srtlist == NULL) rb_throw("Could not allocate more memory", Qnil);
+  if (f->srtlist == NULL) rb_raise(rb_eRuntimeError, "Could not allocate more memory");
   f->fmtlist = (char **)malloc(sizeof(char *)*f->nvar);
-  if (f->fmtlist == NULL) rb_throw("Could not allocate more memory", Qnil);
+  if (f->fmtlist == NULL) rb_raise(rb_eRuntimeError, "Could not allocate more memory");
   f->lbllist = (char **)malloc(sizeof(char *)*f->nvar);
-  if (f->lbllist == NULL) rb_throw("Could not allocate more memory", Qnil);
+  if (f->lbllist == NULL) rb_raise(rb_eRuntimeError, "Could not allocate more memory");
   f->variable_labels = (char **)malloc(sizeof(char *)*f->nvar);
-  if (f->variable_labels == NULL) rb_throw("Could not allocate more memory", Qnil);
+  if (f->variable_labels == NULL) rb_raise(rb_eRuntimeError, "Could not allocate more memory");
   
   v = rb_hash_aref(data, rb_str_new2("fields"));
-  if (TYPE(v) != T_ARRAY) rb_throw("fields are not provided or are not an array", Qnil);
+  if (TYPE(v) != T_ARRAY) rb_raise(rb_eArgError, "fields are not provided or are not an array");
   
   populate_fields_from_ruby_index = 0;
   rb_iterate(rb_each, v, populate_fields_from_ruby, (VALUE)f);
@@ -242,7 +242,7 @@ VALUE method_write(VALUE self, VALUE filename, VALUE data)
     }
   }
   v = rb_hash_aref(data, rb_str_new2("data"));
-  if (TYPE(v) != T_ARRAY) rb_throw("data is not provided or is not an array", Qnil);
+  if (TYPE(v) != T_ARRAY) rb_raise(rb_eArgError, "data is not provided or is not an array");
   
   populate_data_from_ruby_index = 0;
   rb_iterate(rb_each, v, populate_data_from_ruby, (VALUE)f);
@@ -250,14 +250,14 @@ VALUE method_write(VALUE self, VALUE filename, VALUE data)
   
   /* 5.5 Value Label Tables */
   v = rb_hash_aref(data, rb_str_new2("value_labels"));
-  if (TYPE(v) != T_ARRAY) rb_throw("value labels are not provided or are not an array", Qnil);
+  if (TYPE(v) != T_ARRAY) rb_raise(rb_eArgError, "value labels are not provided or are not an array");
   
   populate_value_labels_from_ruby_index = 0;
   rb_iterate(rb_each, v, populate_value_labels_from_ruby, (VALUE)f);
   
   write_stata_file(RSTRING_PTR(filename), f);
   
-  if (f->error) rb_throw(f->error, Qnil);
+  if (f->error) rb_raise(rb_eRuntimeError, f->error);
   
   free_stata(f);
   
