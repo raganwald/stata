@@ -27,7 +27,7 @@ int write_stata_file(char * filename, struct stata_file * f)
   fwrite(&f->nvar, sizeof(f->nvar), 1, fp);
   fwrite(&f->nobs, sizeof(f->nobs), 1, fp);
   fwrite(f->data_label, sizeof(f->data_label), 1, fp);
-  assert(f->time_stamp[17] == 0x00);
+  f->time_stamp[17] = 0;
   fwrite(f->time_stamp, sizeof(f->time_stamp), 1, fp);
   
   

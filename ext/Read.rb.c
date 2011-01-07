@@ -1,5 +1,4 @@
 
-#include <assert.h>
 #include <math.h>
 #include <ruby.h>
 #include "Stata.h"
@@ -31,6 +30,7 @@ VALUE method_read(VALUE self, VALUE file)
   }
   
   struct stata_file * f = read_stata_file(rb_string_value_cstr(&file));
+  if (f == NULL) rb_throw("Read Error", Qnil);
   
   /* 5.1 Headers */
   VALUE r = rb_hash_new();
