@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <assert.h>
 #include <inttypes.h>
 
 #include "Stata.h"
@@ -20,11 +19,19 @@ char get_host_endian()
   return (p[0] == 1) ? 0x02 : 0x01;
 }
 
+int set_error(struct stata_file * f, const char * error)
+{
+  f->error = malloc(strlen(error) + 1);
+  strcpy(f->error, error);
+  return 0;
+}
+
 void free_stata(struct stata_file * f)
 {
-  long i;
+  long i,j;
   
   free(f->filename);
+  free(f->error);
   for (i = 0 ; i < f->nvar ; i++) free(f->varlist[i]);
   for (i = 0 ; i < f->nvar ; i++) free(f->fmtlist[i]);
   for (i = 0 ; i < f->nvar ; i++) free(f->lbllist[i]);
@@ -38,7 +45,10 @@ void free_stata(struct stata_file * f)
   
   for (i = 0 ; i < f->nobs ; i++)
   {
-    
+    for (j = 0 ; j < f->nvar ; j++)
+      if (f->obs[i].var[j].v_type == V_STR)
+        free(f->obs[i].var[j].v_str);
+    free(f->obs[i].var);
   }
   free(f->obs);
   

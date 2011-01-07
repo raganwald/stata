@@ -49,6 +49,7 @@ struct stata_file {
   char data_label[81];
   char time_stamp[18];
   
+  char * error;
   
   uint8_t * typlist;
   char ** varlist;
@@ -64,6 +65,7 @@ struct stata_file {
 };
 
 extern char get_host_endian();
+extern int set_error(struct stata_file * f, const char * error);
 extern void free_stata(struct stata_file * f);
 
 #endif

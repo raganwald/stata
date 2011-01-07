@@ -4,48 +4,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <math.h>
 
 struct stata_file;
 
 int write_stata_file(char * filename, struct stata_file * f)
 {
-  printf("write file \"%s\"\n", filename);
+  printf("write file '%s'\n", filename);
+  
   long i,j;
   
-  fp = fopen(filename, "wb");
-  if (fp == NULL) { fprintf(stderr, "error opening file \"%s\"\n", filename); return 0; }
+  if (f == NULL) return 0;
   
-  assert(f != NULL);
-  assert(f->nvar > 0);
-  assert(f->nobs > 0);
+  fp = fopen(filename, "wb");
+  if (fp == NULL) return set_error(f, "error opening file");
+  
+  if (f->nvar <= 0) return set_error(f, "nvar should be more then 0"); 
+  if (f->nobs <= 0) return set_error(f, "nobs should be more then 0"); 
   
   /* 5.1 Headers */
   char header[4] = {0x72, get_host_endian(), 0x01, 0x00};
-  fwrite(header, 4, 1, fp);
-  fwrite(&f->nvar, sizeof(f->nvar), 1, fp);
-  fwrite(&f->nobs, sizeof(f->nobs), 1, fp);
-  fwrite(f->data_label, sizeof(f->data_label), 1, fp);
+  if (fwrite(header, 4, 1, fp) != 1) return set_error(f, "fwrite to file failed");
+  if (fwrite(&f->nvar, sizeof(f->nvar), 1, fp) != 1) return set_error(f, "fwrite to file failed");
+  if (fwrite(&f->nobs, sizeof(f->nobs), 1, fp) != 1) return set_error(f, "fwrite to file failed");
+  if (fwrite(f->data_label, sizeof(f->data_label), 1, fp) != 1) return set_error(f, "fwrite to file failed");
   f->time_stamp[17] = 0;
-  fwrite(f->time_stamp, sizeof(f->time_stamp), 1, fp);
+  if (fwrite(f->time_stamp, sizeof(f->time_stamp), 1, fp) != 1) return set_error(f, "fwrite to file failed");
   
   
   /* 5.2 Descriptors */
-  fwrite(f->typlist, 1, f->nvar, fp);
-  for (i = 0 ; i < f->nvar ; i++) fwrite(f->varlist[i], 33, 1, fp);
-  fwrite(f->srtlist, 2, f->nvar+1, fp);
-  for (i = 0 ; i < f->nvar ; i++) fwrite(f->fmtlist[i], 49, 1, fp);
-  for (i = 0 ; i < f->nvar ; i++) fwrite(f->lbllist[i], 33, 1, fp);
+  if (fwrite(f->typlist, 1, f->nvar, fp) != f->nvar) return set_error(f, "fwrite to file failed");
+  for (i = 0 ; i < f->nvar ; i++) if (fwrite(f->varlist[i], 33, 1, fp) != 1) return set_error(f, "fwrite to file failed");
+  if (fwrite(f->srtlist, 2, f->nvar+1, fp) != f->nvar+1) return set_error(f, "fwrite to file failed");
+  for (i = 0 ; i < f->nvar ; i++) if (fwrite(f->fmtlist[i], 49, 1, fp) != 1) return set_error(f, "fwrite to file failed");
+  for (i = 0 ; i < f->nvar ; i++) if (fwrite(f->lbllist[i], 33, 1, fp) != 1) return set_error(f, "fwrite to file failed");
   
   
   /* 5.3 Variable Labels */
-  for (i = 0 ; i < f->nvar ; i++) fwrite(f->variable_labels[i], 81, 1, fp);
+  for (i = 0 ; i < f->nvar ; i++) if (fwrite(f->variable_labels[i], 81, 1, fp) != 1) return set_error(f, "fwrite to file failed");
   
   
   /* 5.4 Expansion Fields */
   char zeros[5] = {0,0,0,0,0};
-  fwrite(zeros, 5, 1, fp);
+  if (fwrite(zeros, 5, 1, fp) != 1) return set_error(f, "fwrite to file failed");
   
   
   /* 5.5 Data */
@@ -55,12 +56,12 @@ int write_stata_file(char * filename, struct stata_file * f)
     for (i = 0 ; i < f->nvar ; i++)
     {
       struct stata_var * var = &f->obs[j].var[i];
-      if (f->typlist[i] != 0 && f->typlist[i] < 245) assert(fwrite(var->v_str, f->typlist[i], 1, fp)==1);
-      else if (f->typlist[i] == 251) assert(fwrite(&var->v_byte, sizeof(var->v_byte), 1, fp)==1);
-      else if (f->typlist[i] == 252) assert(fwrite(&var->v_int, sizeof(var->v_int), 1, fp)==1);
-      else if (f->typlist[i] == 253) assert(fwrite(&var->v_long, sizeof(var->v_long), 1, fp)==1);
-      else if (f->typlist[i] == 254) assert(fwrite(&var->v_float, sizeof(var->v_float), 1, fp)==1);
-      else if (f->typlist[i] == 255) assert(fwrite(&var->v_double, sizeof(var->v_double), 1, fp)==1);
+      if (f->typlist[i] != 0 && f->typlist[i] < 245) { if (fwrite(var->v_str, f->typlist[i], 1, fp) != 1) return set_error(f, "fwrite to file failed"); }
+      else if (f->typlist[i] == 251) { if (fwrite(&var->v_byte, sizeof(var->v_byte), 1, fp) != 1) return set_error(f, "fwrite to file failed"); }
+      else if (f->typlist[i] == 252) { if (fwrite(&var->v_int, sizeof(var->v_int), 1, fp) != 1) return set_error(f, "fwrite to file failed"); }
+      else if (f->typlist[i] == 253) { if (fwrite(&var->v_long, sizeof(var->v_long), 1, fp) != 1) return set_error(f, "fwrite to file failed"); }
+      else if (f->typlist[i] == 254) { if (fwrite(&var->v_float, sizeof(var->v_float), 1, fp) != 1) return set_error(f, "fwrite to file failed"); }
+      else if (f->typlist[i] == 255) { if (fwrite(&var->v_double, sizeof(var->v_double), 1, fp) != 1) return set_error(f, "fwrite to file failed"); }
     }
   }
   
@@ -71,18 +72,18 @@ int write_stata_file(char * filename, struct stata_file * f)
   {
     struct stata_vlt * vlt = &f->vlt[i];
     uint32_t len = 4 + 4 + 4*vlt->n + 4*vlt->n + vlt->txtlen;
-    assert(fwrite(&len, sizeof(len), 1, fp)==1);
-    assert(fwrite(vlt->name, 33, 1, fp)==1);
-    assert(fwrite(zeros, 3, 1, fp)==1);
-    assert(fwrite(&vlt->n, sizeof(vlt->n), 1, fp)==1);
+    if (fwrite(&len, sizeof(len), 1, fp) != 1) return set_error(f, "fwrite to file failed");
+    if (fwrite(vlt->name, 33, 1, fp) != 1) return set_error(f, "fwrite to file failed");
+    if (fwrite(zeros, 3, 1, fp) != 1) return set_error(f, "fwrite to file failed");
+    if (fwrite(&vlt->n, sizeof(vlt->n), 1, fp) != 1) return set_error(f, "fwrite to file failed");
     uint32_t txtlen = 0;
     for (j = 0 ; j < vlt->n ; j++)
       txtlen += (int)strlen(vlt->txtbuf + vlt->off[j]) + 1;
     
-    assert(fwrite(&txtlen, sizeof(txtlen), 1, fp)==1);
-    assert(fwrite(vlt->off, sizeof(uint32_t), vlt->n, fp)==(unsigned int)vlt->n);
-    assert(fwrite(vlt->val, sizeof(uint32_t), vlt->n, fp)==(unsigned int)vlt->n);
-    assert(fwrite(vlt->txtbuf, txtlen, 1, fp)==1);
+    if (fwrite(&txtlen, sizeof(txtlen), 1, fp) != 1) return set_error(f, "fwrite to file failed");
+    if (fwrite(vlt->off, sizeof(uint32_t), vlt->n, fp) != (unsigned int)vlt->n) return set_error(f, "fwrite to file failed");
+    if (fwrite(vlt->val, sizeof(uint32_t), vlt->n, fp) != (unsigned int)vlt->n) return set_error(f, "fwrite to file failed");
+    if (fwrite(vlt->txtbuf, txtlen, 1, fp) != 1) return set_error(f, "fwrite to file failed");
   }
   
   fclose(fp);

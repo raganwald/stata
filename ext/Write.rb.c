@@ -1,5 +1,4 @@
 
-#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -25,30 +24,30 @@ VALUE populate_fields_from_ruby(VALUE field, struct stata_file * f)
   VALUE v;
   
   v = rb_hash_aref(field, rb_str_new2("type"));
-  assert(TYPE(v) == T_FIXNUM);
+  if (TYPE(v) != T_FIXNUM) rb_throw("field type is not provided or is not a Fixnum", Qnil);
   f->typlist[populate_fields_from_ruby_index] = NUM2INT(v);
   
   v = rb_hash_aref(field, rb_str_new2("name"));
-  assert(TYPE(v) == T_STRING);
+  if (TYPE(v) != T_STRING) rb_throw("field name is not provided or is not a Fixnum", Qnil);
   f->varlist[populate_fields_from_ruby_index] = (char*)malloc(33);
   strncpy(f->varlist[populate_fields_from_ruby_index], rb_string_value_cstr(&v), 33);
   
   v = rb_hash_aref(field, rb_str_new2("sort"));
-  assert(TYPE(v) == T_FIXNUM);
+  if (TYPE(v) != T_FIXNUM) rb_throw("field sort is not provided or is not a Fixnum", Qnil);
   f->srtlist[populate_fields_from_ruby_index] = NUM2INT(v);
   
   v = rb_hash_aref(field, rb_str_new2("format"));
-  assert(TYPE(v) == T_STRING);
+  if (TYPE(v) != T_STRING) rb_throw("field format is not provided or is not a Fixnum", Qnil);
   f->fmtlist[populate_fields_from_ruby_index] = (char*)malloc(49);
   strncpy(f->fmtlist[populate_fields_from_ruby_index], rb_string_value_cstr(&v), 49);
   
   v = rb_hash_aref(field, rb_str_new2("value_label"));
-  assert(TYPE(v) == T_STRING);
+  if (TYPE(v) != T_STRING) rb_throw("field value_label is not provided or is not a String", Qnil);
   f->lbllist[populate_fields_from_ruby_index] = (char*)malloc(33);
   strncpy(f->lbllist[populate_fields_from_ruby_index], rb_string_value_cstr(&v), 33);
   
   v = rb_hash_aref(field, rb_str_new2("variable_label"));
-  assert(TYPE(v) == T_STRING);
+  if (TYPE(v) != T_STRING) rb_throw("field variable_label is not provided or is not a String", Qnil);
   f->variable_labels[populate_fields_from_ruby_index] = (char*)malloc(81);
   strncpy(f->variable_labels[populate_fields_from_ruby_index], rb_string_value_cstr(&v), 81);
   
@@ -130,14 +129,14 @@ VALUE populate_value_labels_from_ruby(VALUE r_vlt, struct stata_file * f)
   f->vlt = (struct stata_vlt *)realloc(f->vlt, sizeof(struct stata_vlt)*f->num_vlt);
   struct stata_vlt * vlt = &f->vlt[f->num_vlt-1];
   
-  assert(TYPE(r_vlt) == T_HASH);
+  if (TYPE(r_vlt) != T_HASH) rb_throw("Value label table should be a Hash", Qnil);
   
   v = rb_hash_aref(r_vlt, rb_str_new2("name"));
-  assert(TYPE(v) == T_STRING);
+  if (TYPE(v) != T_STRING) rb_throw("Value label table name isn't provided or isn't a String", Qnil);
   strncpy(vlt->name, RSTRING_PTR(v), 33);
   
   v = rb_hash_aref(r_vlt, rb_str_new2("table"));
-  assert(TYPE(v) == T_ARRAY);
+  if (TYPE(v) != T_ARRAY) rb_throw("Value label table name isn't provided or isn't an Array", Qnil);
   
   vlt->n = (int32_t)RARRAY_LEN(v);
   vlt->txtlen = 0;
@@ -149,9 +148,9 @@ VALUE populate_value_labels_from_ruby(VALUE r_vlt, struct stata_file * f)
   for (i = 0 ; i < RARRAY_LEN(v) ; i++)
   {
     VALUE r = rb_ary_entry(v, i);
-    assert(TYPE(r) == T_ARRAY);
-    assert(TYPE(rb_ary_entry(r, 0)) == T_FIXNUM);
-    assert(TYPE(rb_ary_entry(r, 1)) == T_STRING);
+    if (TYPE(r) != T_ARRAY) rb_throw("value label contains a row which isn't an Array", Qnil);
+    if (TYPE(rb_ary_entry(r, 0)) != T_FIXNUM) rb_throw("value label contains a value which isn't a Fixnum", Qnil);
+    if (TYPE(rb_ary_entry(r, 1)) != T_STRING) rb_throw("value label contains a label which isn't a String", Qnil);
     char * txt = RSTRING_PTR(rb_ary_entry(r, 1));
     vlt->txtlen += (int32_t)strlen(txt)+1;
   }
@@ -258,6 +257,9 @@ VALUE method_write(VALUE self, VALUE filename, VALUE data)
   
   write_stata_file(RSTRING_PTR(filename), f);
   
+  if (f->error) rb_throw(f->error, Qnil);
+  
   free_stata(f);
+  
   return INT2NUM(1);
 }
