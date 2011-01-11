@@ -70,7 +70,7 @@ VALUE populate_data_from_ruby(VALUE row, struct stata_file * f)
     else if (f->typlist[j] == 252) var->v_type = V_INT;
     else if (f->typlist[j] == 251) var->v_type = V_BYTE;
     else if (f->typlist[j] <= 244) var->v_type = f->typlist[j];
-    else printf("ERROR, type is %d\n", f->typlist[j]);
+    else rb_raise(rb_eArgError, "type is %d", f->typlist[j]);
     
     switch (TYPE(v)) {
       case T_SYMBOL:
@@ -79,17 +79,14 @@ VALUE populate_data_from_ruby(VALUE row, struct stata_file * f)
         
         int dot = 0;
         if (strlen(symbol_name) == 5) dot = symbol_name[4] - 96;
-        if (dot < 0 || dot > 26) { printf("ERROR, INVALID SYMBOL '%s'\n", symbol_name); continue; }
+        if (dot < 0 || dot > 26) { rb_raise(rb_eArgError, "INVALID SYMBOL '%s'", symbol_name); continue; }
         
         if (f->typlist[j] == 255) var->v_double = pow(2, 1023) + dot*pow(2, 1011);
         else if (f->typlist[j] == 254) var->v_float = (float)pow(2, 127) + dot*(float)pow(2, 115);
         else if (f->typlist[j] == 253) var->v_long = 2147483621 + dot;
         else if (f->typlist[j] == 252) var->v_int = 32741 + dot;
         else if (f->typlist[j] == 251) var->v_byte = 101 + dot;
-        else {
-          printf("ERROR: invalid typlist '%d' %d\n", f->typlist[j], TYPE(v));
-          exit(1);
-        }
+        else rb_raise(rb_eArgError, "invalid typlist '%d' %d", f->typlist[j], TYPE(v));
       break;
       case T_BIGNUM:
       case T_FIXNUM:
@@ -99,10 +96,7 @@ VALUE populate_data_from_ruby(VALUE row, struct stata_file * f)
         else if (f->typlist[j] == 253) var->v_long = (int32_t)FIX2LONG(v);
         else if (f->typlist[j] == 252) var->v_int = FIX2LONG(v);
         else if (f->typlist[j] == 251) var->v_byte = FIX2LONG(v);
-        else {
-          printf("ERROR: invalid typlist '%d' %d %f\n", f->typlist[j], TYPE(v), RFLOAT_VALUE(v));
-          exit(1);
-        }
+        else rb_raise(rb_eArgError, "invalid typlist '%d' %d %f", f->typlist[j], TYPE(v), RFLOAT_VALUE(v));
       break;
       case T_STRING:
         var->v_type = f->typlist[j];
@@ -110,10 +104,10 @@ VALUE populate_data_from_ruby(VALUE row, struct stata_file * f)
         strncpy(var->v_str, RSTRING_PTR(v), f->typlist[j]+1);
       break;
       case T_NIL:
-        printf("ERROR: nil value submitted - this is invalid.\n");
+        rb_raise(rb_eArgError, "nil value submitted");
       break;
       default:
-        printf("ERROR: unknown ruby type: %d\n", TYPE(v));
+        rb_raise(rb_eArgError, "unsupported ruby type: %d", TYPE(v));
       break;
     }
   }
