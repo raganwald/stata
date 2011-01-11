@@ -10,7 +10,7 @@ struct stata_file;
 
 int write_stata_file(char * filename, struct stata_file * f)
 {
-  printf("write file '%s'\n", filename);
+  if (verbose) printf("write file '%s'\n", filename);
   
   long i,j;
   

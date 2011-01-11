@@ -20,7 +20,7 @@ double read_double_t() { uint64_t t=0; fread(&t, sizeof(t), 1, fp); if (swap_end
 
 struct stata_file * read_stata_file(char * filename)
 {
-  printf("read file '%s'\n", filename);
+  if (verbose) printf("read file '%s'\n", filename);
   
   long i,j;
   

@@ -4,6 +4,8 @@
 $LOAD_PATH << '.'
 require 'Stata'
 
+Stata.verbose = true
+
 files = if ARGV.empty?
           Dir.glob("test_file_*.dta")
         else

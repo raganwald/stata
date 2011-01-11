@@ -11,6 +11,7 @@
 
 FILE *fp;
 int swap_endian_needed = 0;
+int verbose = 0;
 
 char get_host_endian()
 {
@@ -66,6 +67,8 @@ void free_stata(struct stata_file * f)
 int main(int argc, char *argv[])
 {
   if (argc != 2) { fprintf(stderr, "usage:\n ./read [file]\n"); return(0); }
+
+  verbose = 1;
   
   char src_file[100];
   char dst_file[100];

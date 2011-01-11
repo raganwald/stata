@@ -7,6 +7,7 @@
 
 extern FILE * fp;
 extern int swap_endian_needed;
+extern int verbose;
 
 enum stata_type {
   V_INVALID, V_STR, V_BYTE, V_INT, V_LONG, V_FLOAT, V_DOUBLE
