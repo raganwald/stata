@@ -108,7 +108,7 @@ VALUE method_read(VALUE self, VALUE file)
       {
         if (f->obs[i].var[j].v_double < pow(2, 1023))
         {
-          var = rb_dbl2big(f->obs[i].var[j].v_double);
+          var = rb_float_new(f->obs[i].var[j].v_double);
         }
         else if (f->obs[i].var[j].v_double >= pow(2, 1023))
         {
