@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name     = 'stata'
-  s.version  = '0.1.1'
+  s.version  = '0.1.2'
   s.authors  = ['Kevin Branigan']
   s.summary  = 'Read and write support for the Stata binary format'
   s.homepage = 'http://github.com/unspace/stata'
